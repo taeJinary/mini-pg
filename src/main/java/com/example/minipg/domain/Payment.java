@@ -106,6 +106,14 @@ public class Payment extends BaseEntity {
         this.failureMessage = message;
     }
 
+    public void markApproved(Instant now) {
+        if (this.status != PaymentStatus.REQUESTED) {
+            throw new IllegalStateException("Payment status can only be approved from REQUESTED");
+        }
+        this.status = PaymentStatus.APPROVED;
+        this.approvedAt = now;
+    }
+
     public void recordFailure(String code, String message) {
         this.failureCode = code;
         this.failureMessage = message;
