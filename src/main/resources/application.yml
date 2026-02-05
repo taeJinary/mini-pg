@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mini_pg?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+pg:
+  fake:
+    base-url: http://localhost:8080
+    timeout-ms: 2000
