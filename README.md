@@ -1,6 +1,6 @@
 
-미니 결제(PG) 서비스 예제입니다.
-결제 생성 API(멱등성 + 동시성 복구)와 Fake PG 연동(success/fail/timeout)**을 구현했습니다.
+미니 결제 서비스 예제입니다.
+결제 생성 API(멱등성 + 동시성 복구)와 fake PG 연동(success/fail/timeout)을 구현했습니다.
 (추가 예정: 웹훅 멱등 처리, 관리자 조회/재처리, 정산)
 
 ## Tech Stack
