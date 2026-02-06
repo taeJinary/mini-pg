@@ -49,4 +49,21 @@ public class Settlement extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SettlementStatus status = SettlementStatus.READY;
+
+    public static Settlement create(
+        Merchant merchant,
+        LocalDate settlementDate,
+        long grossAmount,
+        long feeAmount,
+        long netAmount
+    ) {
+        Settlement settlement = new Settlement();
+        settlement.merchant = merchant;
+        settlement.settlementDate = settlementDate;
+        settlement.grossAmount = grossAmount;
+        settlement.feeAmount = feeAmount;
+        settlement.netAmount = netAmount;
+        settlement.status = SettlementStatus.READY;
+        return settlement;
+    }
 }
