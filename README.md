@@ -60,3 +60,25 @@ src/main/resources/application.yml은 로컬 전용(커밋 제외)
 주문당 1결제: orderId 유니크 제약 + 충돌 시 재조회 반환
 
 장애/운영 관점: PG 타임아웃은 실패로 확정하지 않고 REQUESTED 유지(추후 웹훅으로 확정)
+ 
+# Implemented
+1) 결제 생성 (Idempotency + Concurrency Recovery)
+- `idempotencyKey` 기반 멱등 처리
+- 동시성 경합으로 UNIQUE 충돌 발생 시 `idempotencyKey / orderId` 재조회로 복구
+
+2) PG 연동
+pgMode: success | fail | timeout | random
+
+3) Webhook (eventId Idempotency)
+eventId 기반 멱등 처리(중복 이벤트 no-op + 200 OK)
+
+pgTransactionId로 결제 조회 후 상태 확정(REQUESTED → APPROVED/DECLINED)
+
+결제 미존재(pgTransactionId 미매칭)도 200 OK 응답(운영 재시도 폭탄 방지) 
+
+4) Admin 결제 조회 (Filter + Paging)
+requestedAt 기준 정렬/기간 필터
+
+merchantId/status/from/to 필터 + page/size 페이징
+
+GET /api/admin/payments?status=REQUESTED&page=0&size=20
