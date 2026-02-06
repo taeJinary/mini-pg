@@ -105,15 +105,31 @@ public class PaymentService {
             switch (result.getType()) {
                 case SUCCESS:
                     payment.attachPgTransaction(result.getPgTransactionId());
+                    com.example.minipg.api.controller.FakePgQueryController.record(
+                        payment.getOrder().getId(),
+                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.APPROVED
+                    );
                     break;
                 case DECLINED:
                     payment.markDeclined(result.getFailureCode(), result.getFailureMessage());
+                    com.example.minipg.api.controller.FakePgQueryController.record(
+                        payment.getOrder().getId(),
+                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.DECLINED
+                    );
                     break;
                 case TIMEOUT:
                     payment.recordFailure(result.getFailureCode(), result.getFailureMessage());
+                    com.example.minipg.api.controller.FakePgQueryController.record(
+                        payment.getOrder().getId(),
+                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.PENDING
+                    );
                     break;
                 case ERROR:
                     payment.recordFailure(result.getFailureCode(), result.getFailureMessage());
+                    com.example.minipg.api.controller.FakePgQueryController.record(
+                        payment.getOrder().getId(),
+                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.PENDING
+                    );
                     break;
                 default:
                     break;

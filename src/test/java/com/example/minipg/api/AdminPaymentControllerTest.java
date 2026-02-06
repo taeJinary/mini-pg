@@ -9,6 +9,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -44,6 +45,13 @@ class AdminPaymentControllerTest {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @BeforeEach
+    void cleanDb() {
+        paymentRepository.deleteAll();
+        orderRepository.deleteAll();
+        merchantRepository.deleteAll();
+    }
 
     @Test
     void statusFilterWithPaging() throws Exception {
