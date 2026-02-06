@@ -92,7 +92,7 @@ public class PgWebhookService {
         try {
             return objectMapper.writeValueAsString(request);
         } catch (Exception ex) {
-            return null;
+            return "{}";
         }
     }
 }
