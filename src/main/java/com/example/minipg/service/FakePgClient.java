@@ -61,6 +61,29 @@ public class FakePgClient {
         }
     }
 
+    public PgInquiryResult inquire(String orderId) {
+        try {
+            PgQueryResponse response = restClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/fake-pg/payments").queryParam("orderId", orderId).build())
+                .retrieve()
+                .body(PgQueryResponse.class);
+
+            if (response == null || response.status() == null) {
+                return new PgInquiryResult(PgInquiryResult.Status.NOT_FOUND);
+            }
+
+            return new PgInquiryResult(PgInquiryResult.Status.valueOf(response.status()));
+        } catch (HttpClientErrorException ex) {
+            return new PgInquiryResult(PgInquiryResult.Status.NOT_FOUND);
+        } catch (ResourceAccessException ex) {
+            return new PgInquiryResult(PgInquiryResult.Status.NOT_FOUND);
+        } catch (RestClientException ex) {
+            return new PgInquiryResult(PgInquiryResult.Status.NOT_FOUND);
+        } catch (IllegalArgumentException ex) {
+            return new PgInquiryResult(PgInquiryResult.Status.NOT_FOUND);
+        }
+    }
+
     private PgFailResponse parseFail(String body) {
         if (body == null || body.isBlank()) {
             return null;
@@ -76,5 +99,8 @@ public class FakePgClient {
     }
 
     private record PgFailResponse(String code, String message) {
+    }
+
+    private record PgQueryResponse(String status) {
     }
 }

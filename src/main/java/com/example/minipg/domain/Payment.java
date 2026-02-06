@@ -68,6 +68,12 @@ public class Payment extends BaseEntity {
     @Column(name = "approved_at")
     private Instant approvedAt;
 
+    @Column(name = "verify_count", nullable = false)
+    private long verifyCount = 0;
+
+    @Column(name = "last_verify_at")
+    private Instant lastVerifyAt;
+
     public static Payment create(
         Merchant merchant,
         Order order,
@@ -117,5 +123,10 @@ public class Payment extends BaseEntity {
     public void recordFailure(String code, String message) {
         this.failureCode = code;
         this.failureMessage = message;
+    }
+
+    public void recordVerify(Instant now) {
+        this.verifyCount += 1;
+        this.lastVerifyAt = now;
     }
 }
