@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.example.minipg.domain.Payment;
 
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 
 public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSpecificationExecutor<Payment> {
     Optional<Payment> findByIdempotencyKey(String idempotencyKey);
@@ -27,4 +28,14 @@ public interface PaymentRepository extends JpaRepository<Payment, String>, JpaSp
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Payment p join fetch p.order where p.id = :id")
     Optional<Payment> findByIdForUpdate(String id);
+
+    @Query("""
+        select coalesce(sum(p.amount), 0)
+        from Payment p
+        where p.merchant.id = :merchantId
+          and p.status = com.example.minipg.domain.PaymentStatus.APPROVED
+          and p.requestedAt >= :from
+          and p.requestedAt < :to
+        """)
+    long sumApprovedAmountByMerchantAndRequestedAtBetween(String merchantId, Instant from, Instant to);
 }
