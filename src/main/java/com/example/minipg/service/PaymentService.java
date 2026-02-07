@@ -26,19 +26,22 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final TransactionTemplate transactionTemplate;
     private final FakePgClient fakePgClient;
+    private final FakePgStore fakePgStore;
 
     public PaymentService(
         MerchantRepository merchantRepository,
         OrderRepository orderRepository,
         PaymentRepository paymentRepository,
         TransactionTemplate transactionTemplate,
-        FakePgClient fakePgClient
+        FakePgClient fakePgClient,
+        FakePgStore fakePgStore
     ) {
         this.merchantRepository = merchantRepository;
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.transactionTemplate = transactionTemplate;
         this.fakePgClient = fakePgClient;
+        this.fakePgStore = fakePgStore;
     }
 
     public CreatePaymentResponse createPayment(CreatePaymentRequest request) {
@@ -105,30 +108,30 @@ public class PaymentService {
             switch (result.getType()) {
                 case SUCCESS:
                     payment.attachPgTransaction(result.getPgTransactionId());
-                    com.example.minipg.api.controller.FakePgQueryController.record(
+                    fakePgStore.record(
                         payment.getOrder().getId(),
-                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.APPROVED
+                        FakePgStore.PgPaymentStatus.APPROVED
                     );
                     break;
                 case DECLINED:
                     payment.markDeclined(result.getFailureCode(), result.getFailureMessage());
-                    com.example.minipg.api.controller.FakePgQueryController.record(
+                    fakePgStore.record(
                         payment.getOrder().getId(),
-                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.DECLINED
+                        FakePgStore.PgPaymentStatus.DECLINED
                     );
                     break;
                 case TIMEOUT:
                     payment.recordFailure(result.getFailureCode(), result.getFailureMessage());
-                    com.example.minipg.api.controller.FakePgQueryController.record(
+                    fakePgStore.record(
                         payment.getOrder().getId(),
-                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.PENDING
+                        FakePgStore.PgPaymentStatus.PENDING
                     );
                     break;
                 case ERROR:
                     payment.recordFailure(result.getFailureCode(), result.getFailureMessage());
-                    com.example.minipg.api.controller.FakePgQueryController.record(
+                    fakePgStore.record(
                         payment.getOrder().getId(),
-                        com.example.minipg.api.controller.FakePgQueryController.PgPaymentStatus.PENDING
+                        FakePgStore.PgPaymentStatus.PENDING
                     );
                     break;
                 default:

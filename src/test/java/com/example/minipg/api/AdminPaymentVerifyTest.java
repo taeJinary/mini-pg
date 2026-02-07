@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.minipg.api.controller.FakePgQueryController;
+import com.example.minipg.service.FakePgStore;
 import com.example.minipg.domain.Merchant;
 import com.example.minipg.domain.Order;
 import com.example.minipg.domain.Payment;
@@ -41,6 +41,9 @@ class AdminPaymentVerifyTest {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private FakePgStore fakePgStore;
+
     @BeforeEach
     void cleanDb() {
         paymentRepository.deleteAll();
@@ -51,7 +54,7 @@ class AdminPaymentVerifyTest {
     @Test
     void approveWhenPgApproved() {
         Payment payment = createRequestedPayment("verify-order-1", Instant.parse("2026-02-06T00:00:00Z"));
-        FakePgQueryController.record(payment.getOrder().getId(), FakePgQueryController.PgPaymentStatus.APPROVED);
+        fakePgStore.record(payment.getOrder().getId(), FakePgStore.PgPaymentStatus.APPROVED);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
             "/api/admin/payments/" + payment.getId() + "/verify",
@@ -69,7 +72,7 @@ class AdminPaymentVerifyTest {
     @Test
     void declineWhenPgDeclined() {
         Payment payment = createRequestedPayment("verify-order-2", Instant.parse("2026-02-06T00:00:00Z"));
-        FakePgQueryController.record(payment.getOrder().getId(), FakePgQueryController.PgPaymentStatus.DECLINED);
+        fakePgStore.record(payment.getOrder().getId(), FakePgStore.PgPaymentStatus.DECLINED);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
             "/api/admin/payments/" + payment.getId() + "/verify",
