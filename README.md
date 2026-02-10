@@ -99,3 +99,11 @@
 ## Notes 📝
 - 이 프로젝트는 결제 시스템에서 자주 발생하는 문제(멱등/동시성/웹훅/불확실 상태/정산)를 작은 스케일로 재현하고 해결하는 데 집중했습니다 😊
 
+## update
+Redis 캐시 추가 (PG inquiry 최적화)
+
+- Redis를 PG inquiry 결과 캐시로 사용
+- 키: pg:inquiry:{orderId}
+- TTL: APPROVED/DECLINED 60초, PENDING 10초, NOT_FOUND 2초
+- 캐시 미스 시 PG inquiry 호출 후 캐시 저장
+- 상태 확정(웹훅/verify) 시 캐시 eviction 적용
