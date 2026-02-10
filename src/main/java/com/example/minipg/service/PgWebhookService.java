@@ -26,15 +26,18 @@ public class PgWebhookService {
     private final PaymentEventRepository paymentEventRepository;
     private final PaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
+    private final PgInquiryCache pgInquiryCache;
 
     public PgWebhookService(
         PaymentEventRepository paymentEventRepository,
         PaymentRepository paymentRepository,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper,
+        PgInquiryCache pgInquiryCache
     ) {
         this.paymentEventRepository = paymentEventRepository;
         this.paymentRepository = paymentRepository;
         this.objectMapper = objectMapper;
+        this.pgInquiryCache = pgInquiryCache;
     }
 
     @Transactional
@@ -67,6 +70,7 @@ public class PgWebhookService {
         }
 
         Payment payment = paymentOpt.get();
+        String orderId = payment.getOrder().getId();
         if (payment.getStatus() == PaymentStatus.REQUESTED) {
             if (request.getStatus() == PgWebhookRequest.Status.APPROVED) {
                 payment.markApproved(Instant.now());
@@ -74,6 +78,7 @@ public class PgWebhookService {
                 payment.markDeclined(request.getFailureCode(), request.getFailureMessage());
             }
             paymentRepository.save(payment);
+            pgInquiryCache.evict(orderId);
             return;
         }
 

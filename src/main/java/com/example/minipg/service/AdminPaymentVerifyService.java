@@ -23,22 +23,31 @@ public class AdminPaymentVerifyService {
 
     private final PaymentRepository paymentRepository;
     private final FakePgClient fakePgClient;
+    private final PgInquiryCache pgInquiryCache;
     private final TransactionTemplate transactionTemplate;
 
     public AdminPaymentVerifyService(
         PaymentRepository paymentRepository,
         FakePgClient fakePgClient,
+        PgInquiryCache pgInquiryCache,
         TransactionTemplate transactionTemplate
     ) {
         this.paymentRepository = paymentRepository;
         this.fakePgClient = fakePgClient;
+        this.pgInquiryCache = pgInquiryCache;
         this.transactionTemplate = transactionTemplate;
     }
 
     public Payment verify(String paymentId) {
         PreparedVerification prepared = transactionTemplate.execute(status -> prepareTx(paymentId));
-        PgInquiryResult result = fakePgClient.inquire(prepared.orderId());
-        return transactionTemplate.execute(status -> applyTx(prepared.paymentId(), result));
+        PgInquiryResult cached = pgInquiryCache.get(prepared.orderId());
+        PgInquiryResult result = cached;
+        if (result == null) {
+            result = fakePgClient.inquire(prepared.orderId());
+            pgInquiryCache.put(prepared.orderId(), result);
+        }
+        PgInquiryResult finalResult = result;
+        return transactionTemplate.execute(status -> applyTx(prepared.paymentId(), finalResult));
     }
 
     @Transactional
@@ -68,14 +77,19 @@ public class AdminPaymentVerifyService {
         switch (result.getStatus()) {
             case APPROVED:
                 payment.markApproved(Instant.now());
+                pgInquiryCache.evict(payment.getOrder().getId());
                 break;
             case DECLINED:
                 payment.markDeclined("PG_DECLINED", "Declined by PG");
+                pgInquiryCache.evict(payment.getOrder().getId());
                 break;
             case PENDING:
                 break;
             case NOT_FOUND:
                 handleNotFound(payment, payment.getRequestedAt());
+                if (payment.getStatus() == PaymentStatus.DECLINED) {
+                    pgInquiryCache.evict(payment.getOrder().getId());
+                }
                 break;
             default:
                 break;
